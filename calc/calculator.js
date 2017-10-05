@@ -1,11 +1,12 @@
-window.onload = function() {
+function setup() {
+  localStorage.setItem("mem", 0)
   for(let x = 0; x < 10; x++) {
     id = "" + x
     button = document.getElementById(id)
     button.onclick = function() { updateScreen(x) }
   }
-  button = document.getElementById("=")
 
+  button = document.getElementById("=")
   button.onclick = function() {
     textScreen = document.getElementById("input")
     val = compute(textScreen.value)
@@ -21,35 +22,73 @@ window.onload = function() {
   button = document.getElementById("+")
   button.onclick = function() {
     textScreen = document.getElementById("input")
-    textScreen.value = textScreen.value + "+ "
+    textScreen.value = textScreen.value + " + "
   }
 
   button = document.getElementById("-")
   button.onclick = function() {
     textScreen = document.getElementById("input")
-    textScreen.value = textScreen.value + "- "
+    textScreen.value = textScreen.value + " - "
   }
 
   button = document.getElementById("*")
   button.onclick = function() {
     textScreen = document.getElementById("input")
-    textScreen.value = textScreen.value + "* "
+    textScreen.value = textScreen.value + " * "
   }
 
   button = document.getElementById("/")
   button.onclick = function() {
     textScreen = document.getElementById("input")
-    textScreen.value = textScreen.value + "/ "
+    textScreen.value = textScreen.value + " / "
+  }
+
+  button = document.getElementById("MR")
+  button.onclick = function() {
+    textScreen = document.getElementById("input")
+    textScreen.value = localStorage.getItem("mem")
+  }
+
+  button = document.getElementById("MC")
+  button.onclick = function() {
+    localStorage.setItem("mem", 0)
+  }
+
+  button = document.getElementById("M+")
+  button.onclick = function() {
+    textScreen = document.getElementById("input")
+    val = localStorage.getItem("mem") * 1.0
+    val2 = compute(textScreen.value) * 1.0
+    localStorage.setItem("mem", val + val2)
+  }
+
+  button = document.getElementById("M-")
+  button.onclick = function() {
+    textScreen = document.getElementById("input")
+    val = localStorage.getItem("mem") * 1.0
+    val2 = compute(textScreen.value) * 1.0
+    localStorage.setItem("mem", val - val2)
   }
 
 }
 
 function updateScreen(string) {
   textScreen = document.getElementById("input")
-  textScreen.value = textScreen.value + string + " "
+  textScreen.value = textScreen.value + string
 }
 
 function compute(infix) {
+  short = true
+  infix += " "
+  for(x = 0;x<infix.length;x++) {
+      if(infix.charAt(x) == "+" || infix.charAt(x) == "-" || infix.charAt(x) == "*" || infix.charAt(x) == "/") {
+        short = false
+        break
+      }
+  }
+  if(short) {
+    return infix.trim()
+  }
   post = shuntingYard(infix)
   console.log(post)
   val = computePostFix(post)
@@ -61,27 +100,33 @@ function shuntingYard(infix) {
   operator = [] // stack
 
     character = ""
-    x = 0
-    pre = false
-    while(x < infix.length) {
-      if((infix.charAt(x) == " " || infix.charAt(x) == "+" || infix.charAt(x) == "-" || infix.charAt(x) == "*" || infix.charAt(x) == "/") && character != " " && character != "" ) {
-        output.push(character)
-        if(pre) {
-          output.push(operator.pop())
-        }
-        character = ""
+    expression = false
+    for(x=0;x<infix.length;x++) {
+      ch = infix.charAt(x)
+      if(ch == "-" && infix.charAt(x+1) != " ") {
+        character += ch
       } else {
-        if(infix.charAt(x) == "+" || infix.charAt(x) == "-" || infix.charAt(x) == "*" || infix.charAt(x) == "/") {
-          if(infix.charAt(x) == "*" || infix.charAt(x) == "/") {
-            pre = true
+        if(ch == "-" || ch == "+" || ch == "/" || ch == "*") {
+          if(ch == "*" || ch == "/") {
+            expression = true
           }
-          operator.push(infix.charAt(x))
+          operator.push(ch)
+        }
+        if(ch != " ") {
+          if(ch != "+" && ch != "-" && ch != "*" && ch != "/") {
+            character += ch
+          }
+        } else {
+            if(character != "") {
+              output.push(character)
+              if(expression) {
+                output.push(operator.pop())
+                expression = false
+              }
+              character = ""
+            }
         }
       }
-      if(infix.charAt(x) != " " && infix.charAt(x) != "+" && infix.charAt(x) != "-" && infix.charAt(x) != "*" && infix.charAt(x) != "/") {
-        character += infix.charAt(x)
-      }
-      x++
     }
   length = operator.length
   for(i = 0;i < length; i++) {
